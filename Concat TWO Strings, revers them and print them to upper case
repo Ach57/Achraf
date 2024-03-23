@@ -1,0 +1,143 @@
+section .data
+    msg db "Concatenated Strings before manipulation: "
+    len equ $-msg   ; length of the string msg
+
+    msg2 db  0ah ,"Reversed string: " ; \n Reversed String: 
+    lenMsg2 equ $ - msg2
+    
+    
+    msg3 db 0ah, "To Upper Case message: "
+    lenMsg3 equ $-msg3
+    
+    firstString db "I study "
+    lenFirst equ $-firstString   ; length of the first message
+
+    SecondString db "COMP 228"
+    lenSecond equ $-SecondString ; length of the second message
+
+    result db 50    ; assume the maximum length is 50 
+    
+
+section .text
+    global _start
+    writeSecondMsg:
+        mov ecx, msg2
+        mov edx, lenMsg2
+        mov eax, 4
+        mov ebx, 1
+        int 80h
+        ret
+
+    writeFirstMsg:
+        mov ecx, msg
+        mov edx, len
+        mov eax, 4
+        mov ebx, 1
+        int 80h
+        ret
+        
+        
+    writeThirdMsg:
+        mov ecx, msg3
+        mov edx, lenMsg3
+        mov eax, 4
+        mov ebx, 1
+        int 80h
+        ret
+
+    exit_program:
+        mov eax, 1
+        xor ebx, ebx    ; Clearing ebx
+        int 80h
+
+    copy_loop:
+        mov al, [esi]       ; Load character from source
+        mov [edi], al       ; Copy character to destination
+        inc esi             ; Move to the next character in source
+        inc edi             ; Move to the next character in destination
+        dec ecx             ; Decrement loop counter
+        jnz copy_loop       ; Repeat until loop counter (ecx) becomes zero
+    ret
+
+    print_result:
+          mov ecx, result
+        mov edx, lenFirst + lenSecond
+        mov eax, 4
+        mov ebx, 1
+        int 80h
+        ret
+
+    reverse_string_loop:
+        mov al, [esi]       ; Load character from the beginning of the string
+        mov ah, [edi]       ; Load character from the end of the string
+        mov [esi], ah       ; Swap characters: move the character from the end to the beginning
+        mov [edi], al       ; Swap characters: move the character from the beginning to the end
+        inc esi             ; Move to the next character from the beginning
+        dec edi             ; Move to the previous character from the end
+        dec ecx
+        jnz reverse_string_loop
+        
+        ret
+    
+_start:
+    call writeFirstMsg
+
+    mov esi, firstString  ; Source pointer (firstString)
+    mov edi, result       ; Destination pointer (result)
+    mov ecx, lenFirst      ; Set loop counter to the length of firstString
+
+    call copy_loop
+    
+     ; need to locate the last index of the result
+    ; then copy the second string
+    mov esi, SecondString  ; Source pointer (firstString)
+    mov edi, result       ; Destination pointer (result)
+    mov ecx, lenFirst     ; length of the first string
+    add edi, ecx
+    mov ecx, lenSecond
+    
+    call copy_loop
+    
+    call print_result ; print concatenated string
+    
+    call writeSecondMsg
+    
+    mov esi, result
+    mov edi, result
+    dec edi
+    mov ecx, lenFirst + lenSecond
+    
+    
+    call reverse_string_loop
+    call print_result
+    
+    call writeThirdMsg
+    
+    mov esi, result
+    
+    convert_to_uppercase:
+    mov al, [esi]   ; Loading all the charcters from result to al
+    cmp al, 0       ; Check for null terminator
+    je convert_done  ; If null terminator, exit the loop
+
+    ; Check if the character is a lowercase letter (ASCII range 97-122)
+    cmp al, 'a'
+    jb not_lowercase
+    cmp al, 'z'
+    ja not_lowercase
+
+    ; Convert lowercase letter to uppercase by subtracting 32 (ASCII difference)
+    sub al, 32
+
+not_lowercase:
+    ; Store the converted character back to the string
+    mov [esi], al
+
+    inc esi         ; Move to the next character
+    jmp convert_to_uppercase  ; Repeat for the next character
+
+convert_done:
+    
+    call print_result
+
+    call exit_program
