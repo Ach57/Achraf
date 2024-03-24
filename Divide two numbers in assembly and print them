@@ -1,0 +1,48 @@
+section .data ; constant section
+x db 79 ; Dividend
+y  db 65 ; Divisor
+
+msg db "X/Y is equal to: "
+len equ $-msg
+
+section .bss ; variable section
+result resb 2 ; reserv two bytes to store the memory in it
+
+section .text
+        global _start
+        
+print_message:
+    mov ecx, msg
+    mov edx, len
+    mov eax, 4
+    mov ebx, 1
+    int 80h
+    ret
+    
+exit_program:
+    mov eax, 1
+    mov ebx, 0
+    int 80h
+    ret
+    
+
+_start:
+
+    call print_message
+
+    mov al, [x] ; Multiplicand stored in AL register
+    mov bl, [y]
+    div bl
+    
+; Convert into String to display result in console
+
+    add al, '0'
+    mov [result], al ; AL contains the quotient 1
+
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, result
+    mov edx, 1
+    int 0x80
+    
+  call exit_program
